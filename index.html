@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Identidad — Your Identity Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0c0a;
+    --surface: #16130f;
+    --surface2: #1e1a14;
+    --gold: #c9a96e;
+    --gold-soft: #e8d5b0;
+    --cream: #f5efe6;
+    --muted: #6b6057;
+    --espejo: #c9a96e;
+    --sostenido: #8ba89e;
+    --text: #e8ddd0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(201,169,110,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(139,168,158,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    padding: 48px 0 32px;
+    text-align: center;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .tagline {
+    font-size: 0.78rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Language toggle */
+  .lang-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .lang-btn {
+    background: none;
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .lang-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Mode selector */
+  .mode-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 32px 0 24px;
+    animation: fadeUp 0.8s ease 0.1s both;
+  }
+
+  .mode-card {
+    border: 1px solid #2a2420;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--surface);
+    text-align: left;
+  }
+
+  .mode-card:hover { border-color: var(--muted); }
+
+  .mode-card.active-espejo {
+    border-color: var(--espejo);
+    background: rgba(201,169,110,0.06);
+  }
+
+  .mode-card.active-sostenido {
+    border-color: var(--sostenido);
+    background: rgba(139,168,158,0.06);
+  }
+
+  .mode-icon { font-size: 1.4rem; margin-bottom: 10px; }
+
+  .mode-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+
+  .mode-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Mood indicator */
+  .mood-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    animation: fadeUp 0.8s ease 0.2s both;
+    min-height: 42px;
+  }
+
+  .mood-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.5s;
+  }
+
+  .mood-dot.processing { background: var(--gold); animation: pulse 1s infinite; }
+  .mood-dot.vulnerable { background: #8ba89e; }
+  .mood-dot.resilient { background: #c9a96e; }
+  .mood-dot.confused { background: #a89b8b; }
+  .mood-dot.ready { background: #b5c9a0; }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 24px;
+    animation: fadeUp 0.8s ease 0.3s both;
+  }
+
+  .message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .message.ai { align-items: flex-start; }
+  .message.user { align-items: flex-end; }
+
+  .bubble {
+    max-width: 85%;
+    padding: 14px 18px;
+    border-radius: 16px;
+    line-height: 1.65;
+    font-size: 0.9rem;
+  }
+
+  .message.ai .bubble {
+    background: var(--surface);
+    border: 1px solid #2a2420;
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+  }
+
+  .message.ai.espejo .bubble { border-color: rgba(201,169,110,0.3); }
+  .message.ai.sostenido .bubble { border-color: rgba(139,168,158,0.3); }
+
+  .message.user .bubble {
+    background: var(--surface2);
+    border: 1px solid #2e2820;
+    border-bottom-right-radius: 4px;
+    color: var(--gold-soft);
+  }
+
+  .sender-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 4px;
+  }
+
+  /* Options (multiple choice) */
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    max-width: 85%;
+  }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid #2a2420;
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+
+  .option-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold-soft);
+    background: rgba(201,169,110,0.05);
+  }
+
+  /* Input area */
+  .input-area {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding: 16px 0 24px;
+    border-top: 1px solid #1e1a14;
+  }
+
+  .input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  textarea {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid #2a2420;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 300;
+    resize: none;
+    min-height: 48px;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+    overflow-y: auto;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--muted);
+  }
+
+  textarea::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--gold);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: var(--gold-soft); }
+  .send-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .send-btn svg { width: 18px; height: 18px; fill: var(--bg); }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid #2a2420;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+
+  .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Divider */
+  .phase-divider {
+    text-align: center;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .phase-divider::before, .phase-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2a2420;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hidden { display: none; }
+
+  /* Onboarding screen */
+  #onboarding {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 0;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .onboarding-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--cream);
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+
+  .onboarding-sub {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+
+  .start-btn {
+    background: none;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-self: flex-start;
+  }
+
+  .start-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .feature-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .feature-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="logo">Identidad</div>
+    <div class="tagline" id="tagline">Your identity transition companion</div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+
+  <!-- Onboarding -->
+  <div id="onboarding">
+    <div class="onboarding-title" id="ob-title">You haven't lost yourself.<br>You're becoming someone new.</div>
+    <div class="onboarding-sub" id="ob-sub">Identidad is a private space to understand who you are right now — and who you're growing into. No judgment. No pressure. Just honest reflection, at your own pace.</div>
+    <div class="feature-list">
+      <div class="feature-item"><div class="feature-dot"></div><span id="f1">Two modes: Espejo (honest mirror) and Sostenido (gentle support)</span></div>
+      <div class="feature-item"><div class="feature-dot"></div><span id="f2">Guided questions that help you organize what you feel</span></div>
+      <div class="feature-item"><div class="feature-dot"></div><span id="f3">Reads your emotional tone and responds accordingly</span></div>
+      <div class="feature-item"><div class="feature-dot"></div><span id="f4">Book recommendations based on exactly where you are</span></div>
+    </div>
+    <button class="start-btn" id="start-btn" onclick="startSession()">Begin your reflection</button>
+  </div>
+
+  <!-- Chat UI (hidden until started) -->
+  <div id="chat-ui" class="hidden" style="flex:1;display:flex;flex-direction:column;">
+    <div class="mode-selector">
+      <div class="mode-card" id="card-espejo" onclick="setMode('espejo')">
+        <div class="mode-icon">🪞</div>
+        <div class="mode-name">Espejo</div>
+        <div class="mode-desc" id="md-espejo">Honest. Direct. No sugarcoating. When you're ready to see clearly.</div>
+      </div>
+      <div class="mode-card" id="card-sostenido" onclick="setMode('sostenido')">
+        <div class="mode-icon">🌿</div>
+        <div class="mode-name">Sostenido</div>
+        <div class="mode-desc" id="md-sostenido">Warm. Held. Gentle questions. When you just need to feel supported.</div>
+      </div>
+    </div>
+
+    <div class="mood-bar">
+      <div class="mood-dot" id="mood-dot"></div>
+      <span id="mood-text">Share what's on your mind and I'll sense where you are emotionally.</span>
+    </div>
+
+    <div class="chat-area" id="chat-area"></div>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea id="user-input" rows="1" placeholder="Just start typing... no filter needed." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let lang = 'en';
+  let mode = 'sostenido';
+  let conversationHistory = [];
+  let sessionStarted = false;
+
+  const copy = {
+    en: {
+      tagline: 'Your identity transition companion',
+      ob_title: "You haven't lost yourself.\nYou're becoming someone new.",
+      ob_sub: "Identidad is a private space to understand who you are right now — and who you're growing into. No judgment. No pressure. Just honest reflection, at your own pace.",
+      f1: 'Two modes: Espejo (honest mirror) and Sostenido (gentle support)',
+      f2: 'Guided questions that help you organize what you feel',
+      f3: 'Reads your emotional tone and responds accordingly',
+      f4: 'Book recommendations based on exactly where you are',
+      start: 'Begin your reflection',
+      placeholder: 'Just start typing... no filter needed.',
+      mood_default: "Share what's on your mind and I'll sense where you are emotionally.",
+      md_espejo: "Honest. Direct. No sugarcoating. When you're ready to see clearly.",
+      md_sostenido: "Warm. Held. Gentle questions. When you just need to feel supported.",
+    },
+    es: {
+      tagline: 'Tu compañera en la transición de identidad',
+      ob_title: "No te has perdido.\nEstás convirtiéndote en alguien nuevo.",
+      ob_sub: "Identidad es un espacio privado para entender quién eres ahora — y en quién te estás convirtiendo. Sin juicio. Sin presión. Solo reflexión honesta, a tu propio ritmo.",
+      f1: 'Dos modos: Espejo (reflejo honesto) y Sostenido (apoyo suave)',
+      f2: 'Preguntas guiadas que te ayudan a organizar lo que sientes',
+      f3: 'Lee tu tono emocional y responde en consecuencia',
+      f4: 'Recomendaciones de libros según exactamente dónde estás',
+      start: 'Comenzar tu reflexión',
+      placeholder: 'Solo empieza a escribir... sin filtros.',
+      mood_default: 'Cuéntame qué tienes en mente y detectaré cómo te sientes.',
+      md_espejo: 'Honesto. Directo. Sin endulzar. Cuando estás lista para ver con claridad.',
+      md_sostenido: 'Cálido. Contenido. Preguntas suaves. Cuando solo necesitas sentirte apoyada.',
+    }
+  };
+
+  function setLang(l) {
+    lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.lang-btn:${l === 'en' ? 'first' : 'last'}-child`).classList.add('active');
+    const c = copy[l];
+    document.getElementById('tagline').textContent = c.tagline;
+    document.getElementById('ob-title').innerHTML = c.ob_title.replace('\n', '<br>');
+    document.getElementById('ob-sub').textContent = c.ob_sub;
+    document.getElementById('f1').textContent = c.f1;
+    document.getElementById('f2').textContent = c.f2;
+    document.getElementById('f3').textContent = c.f3;
+    document.getElementById('f4').textContent = c.f4;
+    document.getElementById('start-btn').textContent = c.start;
+    document.getElementById('user-input').placeholder = c.placeholder;
+    document.getElementById('mood-text').textContent = c.mood_default;
+    document.getElementById('md-espejo').textContent = c.md_espejo;
+    document.getElementById('md-sostenido').textContent = c.md_sostenido;
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('card-espejo').className = 'mode-card' + (m === 'espejo' ? ' active-espejo' : '');
+    document.getElementById('card-sostenido').className = 'mode-card' + (m === 'sostenido' ? ' active-sostenido' : '');
+  }
+
+  function startSession() {
+    document.getElementById('onboarding').classList.add('hidden');
+    document.getElementById('chat-ui').classList.remove('hidden');
+    document.getElementById('chat-ui').style.display = 'flex';
+    setMode('sostenido');
+    addWelcomeMessage();
+  }
+
+  function addWelcomeMessage() {
+    const msgs = {
+      en: `Welcome. This is your space.\n\nBefore we begin, I want to ask you something simple:\n\n*Right now, in this moment — how are you feeling about who you are?*`,
+      es: `Bienvenida. Este es tu espacio.\n\nAntes de empezar, quiero preguntarte algo sencillo:\n\n*Ahora mismo, en este momento — ¿cómo te sientes respecto a quién eres?*`
+    };
+    const options_en = ["Honestly, a bit lost", "In the middle of a big change", "Rebuilding after something hard", "Curious about who I'm becoming"];
+    const options_es = ["Honestamente, un poco perdida", "En medio de un gran cambio", "Reconstruyéndome después de algo difícil", "Curiosa sobre en quién me estoy convirtiendo"];
+
+    appendMessage('ai', msgs[lang], 'sostenido', lang === 'en' ? options_en : options_es);
+    conversationHistory.push({ role: 'assistant', content: msgs[lang] });
+  }
+
+  function appendMessage(role, text, modeClass = '', options = []) {
+    const area = document.getElementById('chat-area');
+    const msg = document.createElement('div');
+    msg.className = `message ${role}${modeClass ? ' ' + modeClass : ''}`;
+
+    const label = document.createElement('div');
+    label.className = 'sender-label';
+    label.textContent = role === 'ai' ? 'Identidad' : (lang === 'en' ? 'You' : 'Tú');
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = text.replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    msg.appendChild(label);
+    msg.appendChild(bubble);
+
+    if (options.length > 0) {
+      const grid = document.createElement('div');
+      grid.className = 'options-grid';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => {
+          selectOption(opt);
+          grid.remove();
+        };
+        grid.appendChild(btn);
+      });
+      msg.appendChild(grid);
+    }
+
+    area.appendChild(msg);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function selectOption(text) {
+    appendMessage('user', text);
+    conversationHistory.push({ role: 'user', content: text });
+    getAIResponse(text);
+  }
+
+  function showTyping() {
+    const area = document.getElementById('chat-area');
+    const typing = document.createElement('div');
+    typing.className = 'message ai';
+    typing.id = 'typing-indicator';
+    typing.innerHTML = `<div class="sender-label">Identidad</div><div class="typing"><span></span><span></span><span></span></div>`;
+    area.appendChild(typing);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
+  }
+
+  function updateMood(moodClass, moodLabel) {
+    const dot = document.getElementById('mood-dot');
+    const text = document.getElementById('mood-text');
+    dot.className = 'mood-dot ' + moodClass;
+    text.textContent = moodLabel;
+  }
+
+  async function getAIResponse(userMessage) {
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+    showTyping();
+
+    updateMood('processing', lang === 'en' ? 'Reading your emotional tone...' : 'Leyendo tu tono emocional...');
+
+    const systemPrompt = `You are Identidad, a warm and perceptive identity transition companion for women navigating major life and career shifts. You were created by Catalina, a woman who went through her own profound identity transition and built this tool for others.
+
+Your purpose: Help women understand who they are right now, recognize their evolving identity, and consciously build who they want to become.
+
+CURRENT MODE: ${mode === 'espejo' ? 
+  'ESPEJO — Be honest, direct, and clear. No sugarcoating. Ask pointed questions that cut through self-deception gently but firmly. This is the mirror mode.' : 
+  'SOSTENIDO — Be warm, gentle, and holding. Use soft language. Make the person feel safe and supported. Ask nurturing questions.'}
+
+LANGUAGE: Respond in ${lang === 'en' ? 'English' : 'Spanish'}. If the user mixes languages (Spanglish), match their energy and mix too — it's welcome here.
+
+EMOTIONAL DETECTION: At the START of your response, on its own line, write one of these mood tags (these will be parsed and removed from display): [MOOD:vulnerable] [MOOD:resilient] [MOOD:confused] [MOOD:ready] — choose based on the emotional tone of what they shared.
+
+YOUR STYLE:
+- Ask 1-2 questions maximum per response, never overwhelm
+- Sometimes offer 3-4 multiple choice options to help organize thinking (format as OPTIONS: then each on new line starting with -)
+- Reference the concepts of identity: how it's built invisibly over years, how transitions happen before we notice, how the new identity is already growing
+- Occasionally recommend specific books when truly relevant (Brianna Wiest, Mel Robbins, etc.)
+- Be conversational, not clinical
+- Keep responses concise — 3-5 sentences max before a question
+- Never use bullet points or lists in your main text
+- Make her feel SEEN
+
+IMPORTANT: You are not a therapist. You are a companion and guide. Always be clear about this if asked.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: conversationHistory
+        })
+      });
+
+      const data = await response.json();
+      let fullText = data.content.map(i => i.text || '').join('');
+
+      // Parse mood
+      const moodMatch = fullText.match(/\[MOOD:(\w+)\]/);
+      if (moodMatch) {
+        const moodMap = {
+          vulnerable: { class: 'vulnerable', en: 'Sensing vulnerability — you\'re in a tender place.', es: 'Sintiendo vulnerabilidad — estás en un lugar delicado.' },
+          resilient: { class: 'resilient', en: 'Sensing resilience — something strong is emerging.', es: 'Sintiendo resiliencia — algo fuerte está emergiendo.' },
+          confused: { class: 'confused', en: 'Sensing some fog — that\'s completely normal in transitions.', es: 'Sintiendo algo de niebla — eso es completamente normal en transiciones.' },
+          ready: { class: 'ready', en: 'Sensing readiness — you\'re more prepared than you think.', es: 'Sintiendo disposición — estás más preparada de lo que crees.' }
+        };
+        const m = moodMap[moodMatch[1]];
+        if (m) updateMood(m.class, lang === 'en' ? m.en : m.es);
+        fullText = fullText.replace(/\[MOOD:\w+\]\n?/, '');
+      }
+
+      // Parse options
+      let options = [];
+      const optionsMatch = fullText.match(/OPTIONS:\n((?:- .+\n?)+)/);
+      if (optionsMatch) {
+        options = optionsMatch[1].split('\n').filter(l => l.startsWith('- ')).map(l => l.slice(2).trim());
+        fullText = fullText.replace(/OPTIONS:\n(?:- .+\n?)+/, '').trim();
+      }
+
+      removeTyping();
+      appendMessage('ai', fullText, mode, options);
+      conversationHistory.push({ role: 'assistant', content: fullText });
+
+    } catch (err) {
+      removeTyping();
+      const errMsg = lang === 'en' ? 'Something went quiet for a moment. Try again.' : 'Algo se silenció por un momento. Inténtalo de nuevo.';
+      appendMessage('ai', errMsg, mode);
+      updateMood('', lang === 'en' ? 'Connection interrupted.' : 'Conexión interrumpida.');
+    }
+
+    btn.disabled = false;
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    appendMessage('user', text);
+    conversationHistory.push({ role: 'user', content: text });
+    await getAIResponse(text);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+</script>
+</body>
+</html>
